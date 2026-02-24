@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+:root {
+  --background: #F9FAFB;
+  --surface: #FFFFFF;
+  --accent: #22C55E;
+  --accent-dark: #166534;
+  --primary-text: #111827;
+  --secondary-text: #6B7280;
+  --border: #D1D5DB;
+  --error: #EF4444;
+  --success: #10B981;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--primary-text);
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', sans-serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent text-[#0B0F14] font-semibold px-4 py-2 rounded-[6px] hover:bg-accent-dark hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent border border-accent text-accent font-semibold px-4 py-2 rounded-[6px] hover:bg-accent hover:text-[#0B0F14] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-secondary-text font-medium px-4 py-2 rounded-[6px] hover:text-primary-text transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
+  }
+  
+  .btn-destructive {
+    @apply bg-[#F87171] text-white font-semibold px-4 py-2 rounded-[6px] hover:bg-[#B91C1C] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-surface rounded-[8px] border border-border shadow-sm;
+  }
+  
+  .input {
+    @apply w-full border border-border rounded-[6px] px-3 py-2 text-primary-text bg-surface focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent placeholder:text-secondary-text;
+  }
+  
+  .label {
+    @apply block text-sm font-medium text-primary-text mb-1;
+  }
+
+  .verified-badge {
+    @apply inline-flex items-center gap-1 bg-accent/10 text-accent-dark text-xs font-semibold px-2 py-1 rounded-full border border-accent/20;
+  }
+
+  .verified-badge:hover {
+    animation: pulse-green 0.6s ease-in-out;
+  }
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3); }
+}

@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  COACH
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum BookingStatus {
+  PAYMENT_PENDING
+  PAID
+  COMPLETED
+  DISPUTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          Role      @default(USER)
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  coachProfile  CoachProfile?
+  bookingsAsUser Booking[] @relation("UserBookings")
+  sentMessages  Message[]
+  reviews       Review[]
+  disputes      Dispute[] @relation("UserDisputes")
+  auditLogs     AdminAuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CoachProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  headline           String
+  bio                String
+  games              String[]
+  languages          String[]
+  rateCents          Int
+  verificationStatus VerificationStatus @default(PENDING)
+  lastVerifiedAt     DateTime?
+  rejectionReason    String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proofMedia         ProofMedia[]
+  availabilitySlots  AvailabilitySlot[]
+  bookings           Booking[]          @relation("CoachBookings")
+  reviews            Review[]
+}
+
+model ProofMedia {
+  id             String        @id @default(cuid())
+  coachProfileId String
+  type           MediaType
+  url            String
+  caption        String?
+  createdAt      DateTime      @default(now())
+
+  coachProfile   CoachProfile  @relation(fields: [coachProfileId], references: [id], onDelete: Cascade)
+}
+
+model AvailabilitySlot {
+  id             String       @id @default(cuid())
+  coachProfileId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  timezone       String       @default("UTC")
+
+  coachProfile   CoachProfile @relation(fields: [coachProfileId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  userId          String
+  coachProfileId  String
+  status          BookingStatus @default(PAYMENT_PENDING)
+  scheduledAt     DateTime
+  durationMinutes Int           @default(60)
+  priceCents      Int
+  platformFeeCents Int
+  totalCents      Int
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation("UserBookings", fields: [userId], references: [id])
+  coachProfile    CoachProfile  @relation("CoachBookings", fields: [coachProfileId], references: [id])
+  payment         Payment?
+  messages        Message[]
+  review          Review?
+  dispute         Dispute?
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique
+  status      PaymentStatus @default(PENDING)
+  amountCents Int
+  method      String        @default("demo")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id])
+}
+
+model Review {
+  id             String       @id @default(cuid())
+  bookingId      String       @unique
+  userId         String
+  coachProfileId String
+  rating         Int
+  comment        String
+  createdAt      DateTime     @default(now())
+
+  booking        Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+  coachProfile   CoachProfile @relation(fields: [coachProfileId], references: [id])
+}
+
+model Dispute {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique
+  userId      String
+  status      DisputeStatus @default(OPEN)
+  reason      String
+  evidenceUrl String?
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user        User          @relation("UserDisputes", fields: [userId], references: [id])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  admin      User     @relation(fields: [adminId], references: [id])
+}
