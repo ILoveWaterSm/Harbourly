@@ -30,7 +30,7 @@ async function main() {
   // Create users
   const admin = await prisma.user.create({
     data: {
-      email: "admin@habourly.test",
+      email: "admin@harbourly.test",
       passwordHash: await hashPassword("AdminPass123!"),
       name: "Admin User",
       role: "ADMIN",
@@ -40,7 +40,7 @@ async function main() {
 
   const player = await prisma.user.create({
     data: {
-      email: "player@habourly.test",
+      email: "player@harbourly.test",
       passwordHash: await hashPassword("PlayerPass123!"),
       name: "Alex Player",
       role: "USER",
@@ -50,7 +50,7 @@ async function main() {
 
   const coachUser1 = await prisma.user.create({
     data: {
-      email: "coach1@habourly.test",
+      email: "coach1@harbourly.test",
       passwordHash: await hashPassword("CoachPass123!"),
       name: "Jordan Rivera",
       role: "COACH",
@@ -60,7 +60,7 @@ async function main() {
 
   const coachUser2 = await prisma.user.create({
     data: {
-      email: "coach2@habourly.test",
+      email: "coach2@harbourly.test",
       passwordHash: await hashPassword("CoachPass123!"),
       name: "Sam Chen",
       role: "COACH",
@@ -188,9 +188,9 @@ async function main() {
 
   // Add more coaches for the browse page
   const extraCoachUsers = [
-    { email: "coach3@habourly.test", name: "Maya Thompson", game: "Fortnite", headline: "Champion Fortnite player · Building & editing coach", rate: 5000 },
-    { email: "coach4@habourly.test", name: "Dev Patel", game: "Apex Legends", headline: "Predator Apex coach · Movement & aim specialist", rate: 4000 },
-    { email: "coach5@habourly.test", name: "Zoe Kim", game: "Overwatch 2", headline: "Top 500 OW2 · Support main & team comms coach", rate: 3000 },
+    { email: "coach3@harbourly.test", name: "Maya Thompson", game: "Fortnite", headline: "Champion Fortnite player · Building & editing coach", rate: 5000 },
+    { email: "coach4@harbourly.test", name: "Dev Patel", game: "Apex Legends", headline: "Predator Apex coach · Movement & aim specialist", rate: 4000 },
+    { email: "coach5@harbourly.test", name: "Zoe Kim", game: "Overwatch 2", headline: "Top 500 OW2 · Support main & team comms coach", rate: 3000 },
   ];
 
   for (const ec of extraCoachUsers) {
@@ -229,10 +229,10 @@ async function main() {
 
   console.log("✅ Seed complete!");
   console.log("\n📋 Demo accounts:");
-  console.log("  Admin:  admin@habourly.test / AdminPass123!");
-  console.log("  Player: player@habourly.test / PlayerPass123!");
-  console.log("  Coach:  coach1@habourly.test / CoachPass123!  (verified)");
-  console.log("  Coach:  coach2@habourly.test / CoachPass123!  (pending)");
+  console.log("  Admin:  admin@harbourly.test / AdminPass123!");
+  console.log("  Player: player@harbourly.test / PlayerPass123!");
+  console.log("  Coach:  coach1@harbourly.test / CoachPass123!  (verified)");
+  console.log("  Coach:  coach2@harbourly.test / CoachPass123!  (pending)");
 }
 
 main()

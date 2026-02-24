@@ -37,10 +37,10 @@ Open [http://localhost:3000](http://localhost:3000)
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@habourly.test | AdminPass123! |
-| Player | player@habourly.test | PlayerPass123! |
-| Coach (verified) | coach1@habourly.test | CoachPass123! |
-| Coach (pending) | coach2@habourly.test | CoachPass123! |
+| Admin | admin@harbourly.test | AdminPass123! |
+| Player | player@harbourly.test | PlayerPass123! |
+| Coach (verified) | coach1@harbourly.test | CoachPass123! |
+| Coach (pending) | coach2@harbourly.test | CoachPass123! |
 
 ## Architecture
 
