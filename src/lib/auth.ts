@@ -3,7 +3,10 @@ import { prisma } from "./prisma";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 
-const SESSION_SECRET = process.env.SESSION_SECRET || "harbourly-super-secret-session-key-change-in-production";
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  throw new Error("SESSION_SECRET environment variable is not set");
+}
 const SESSION_COOKIE = "harbourly_session";
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
