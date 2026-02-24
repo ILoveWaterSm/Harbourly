@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Harbourly 🛡️
 
-## Getting Started
+A verification-first marketplace for gaming coaches. Your safe harbour for real coaching, real proof, and transparent pricing.
 
-First, run the development server:
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Docker & Docker Compose
+
+### Setup
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start PostgreSQL
+docker compose up -d
+
+# 3. Copy environment variables (already set for local dev)
+# The .env file is pre-configured for the Docker Compose Postgres instance
+
+# 4. Run database migrations
+npx prisma migrate dev
+
+# 5. Seed demo data
+npx prisma db seed
+
+# 6. Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo Accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@habourly.test | AdminPass123! |
+| Player | player@habourly.test | PlayerPass123! |
+| Coach (verified) | coach1@habourly.test | CoachPass123! |
+| Coach (pending) | coach2@habourly.test | CoachPass123! |
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (public)/          # Public pages
+│   ├── admin/             # Admin console
+│   ├── auth/              # Login/Register
+│   ├── bookings/[id]/     # Booking detail
+│   ├── coaches/           # Browse + profile
+│   ├── dashboard/         # User/Coach dashboard
+│   └── api/               # API routes
+├── components/
+│   ├── layout/            # Navbar, Footer
+│   └── ui/                # Reusable components
+└── lib/
+    ├── actions/           # Server actions
+    ├── auth.ts            # Session management
+    ├── prisma.ts          # DB client
+    └── utils.ts           # Helpers
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Framework**: Next.js 16 (App Router) + TypeScript
+- **Database**: PostgreSQL (via Docker)
+- **ORM**: Prisma 7
+- **Styling**: Tailwind CSS v4
+- **Auth**: HttpOnly cookie sessions (JWT via jose)
+- **Validation**: Zod
 
-## Deploy on Vercel
+## Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- ✅ Verified coach marketplace with proof gallery
+- ✅ Role-based access control (USER / COACH / ADMIN)
+- ✅ Booking system with demo payment
+- ✅ In-session chat
+- ✅ Review system (tied to completed bookings)
+- ✅ Dispute management with evidence URLs
+- ✅ Admin verification console with audit logs
+- ✅ Brand-compliant UI (Sora/Inter fonts, green accent)
