@@ -3,10 +3,14 @@ import { prisma } from "./prisma";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 
-const SESSION_SECRET = process.env.SESSION_SECRET;
-if (!SESSION_SECRET) {
-  throw new Error("SESSION_SECRET environment variable is not set");
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET environment variable is not set");
+  }
+  return secret;
 }
+
 const SESSION_COOKIE = "harbourly_session";
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -19,7 +23,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export async function createSession(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(SESSION_SECRET);
+  const secret = new TextEncoder().encode(getSessionSecret());
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -40,7 +44,7 @@ export async function getSession() {
   if (!token) return null;
 
   try {
-    const secret = new TextEncoder().encode(SESSION_SECRET);
+    const secret = new TextEncoder().encode(getSessionSecret());
     const { payload } = await jwtVerify(token, secret);
     const userId = payload.userId as string;
 

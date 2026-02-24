@@ -6,10 +6,9 @@ import { createBookingAction } from "@/lib/actions/bookings";
 
 interface Props {
   coach: { id: string; name: string; rateCents: number };
-  userId: string;
 }
 
-export default function BookingForm({ coach, userId: _userId }: Props) {
+export default function BookingForm({ coach }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);

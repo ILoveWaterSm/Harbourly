@@ -56,7 +56,7 @@ export default async function BecomeACoachPage() {
             <Link href="/dashboard" className="btn-primary text-sm mt-4 px-6 py-2.5 inline-block">Go to dashboard</Link>
           </div>
         ) : (
-          <CoachApplicationForm userId={user.id} />
+          <CoachApplicationForm />
         )}
       </div>
     </div>

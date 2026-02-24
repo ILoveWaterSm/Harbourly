@@ -19,7 +19,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <h1 className="font-heading text-2xl font-bold text-primary-text mb-2">Book a session</h1>
         <p className="text-secondary-text text-sm mb-8">with <strong>{coach.user.name}</strong></p>
-        <BookingForm coach={{ id: coach.id, name: coach.user.name, rateCents: coach.rateCents }} userId={user.id} />
+        <BookingForm coach={{ id: coach.id, name: coach.user.name, rateCents: coach.rateCents }} />
       </div>
     </div>
   );

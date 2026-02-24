@@ -7,7 +7,7 @@ import { applyAsCoachAction } from "@/lib/actions/coach";
 const GAMES = ["League of Legends", "Valorant", "CS2", "Fortnite", "Apex Legends", "Overwatch 2", "Rocket League", "DOTA 2", "Minecraft", "Other"];
 const LANGUAGES = ["English", "Spanish", "French", "German", "Portuguese", "Korean", "Japanese", "Chinese"];
 
-export default function CoachApplicationForm({ userId: _userId }: { userId: string }) {
+export default function CoachApplicationForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
