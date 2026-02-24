@@ -1,33 +1,37 @@
 import type { Metadata } from "next";
-import { Sora, Inter } from "next/font/google";
 import "./globals.css";
-
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { getSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Harbourly - Verified Gaming Coaches",
-  description: "Find and book verified gaming coaches on Harbourly, the verification-first marketplace for competitive gamers.",
+  title: {
+    default: "Harbourly — Verified Gaming Coaches",
+    template: "%s | Harbourly",
+  },
+  description: "Your safe harbour. Book verified gaming coaches with real proof and transparent pricing.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getSession();
+
   return (
     <html lang="en">
-      <body className={`${sora.variable} ${inter.variable} antialiased`}>
-        {children}
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="bg-background min-h-screen flex flex-col antialiased">
+        <Navbar user={user ? { name: user.name, role: user.role } : null} />
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );
