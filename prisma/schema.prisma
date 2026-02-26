@@ -1,0 +1,456 @@
+// Habourly Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  COACH
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_MORE_INFO
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  DISPUTED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING
+  TRANSFERRED
+  HELD
+  CANCELLED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_REFUND
+  RESOLVED_RELEASE
+  CLOSED
+}
+
+enum ProofAssetType {
+  ID_DOCUMENT
+  GAMEPLAY_SCREENSHOT
+  GAMEPLAY_VIDEO
+  SKILL_QUIZ_RESULT
+}
+
+enum ProofVisibility {
+  PRIVATE
+  PUBLIC
+  ADMIN_ONLY
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?
+  name          String?
+  role          UserRole   @default(CUSTOMER)
+  status        UserStatus @default(ACTIVE)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  lastLoginAt   DateTime?
+
+  coachProfile       CoachProfile?
+  bookingsAsCustomer Booking[]      @relation("CustomerBookings")
+  bookingsAsCoach    Booking[]      @relation("CoachBookings")
+  sentMessages       Message[]
+  disputesOpened     Dispute[]      @relation("DisputeOpener")
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  reviews            Review[]       @relation("CustomerReviews")
+  savedCoaches       SavedCoach[]
+  accounts           Account[]
+  sessions           Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model CoachProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  displayName       String
+  bio               String   @db.Text
+  games             String[]
+  ranks             Json
+  languages         String[]
+  pricingFrom       Int
+  isActive          Boolean  @default(true)
+  contentFlags      String[]
+  stripeAccountId   String?
+  timezone          String   @default("UTC")
+  cancellationHours Int      @default(24)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verification           VerificationSubmission?
+  services               ServicePackage[]
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
+  proofAssets            ProofAsset[]
+  reviews                Review[]
+  savedBy                SavedCoach[]
+
+  @@map("coach_profiles")
+}
+
+model VerificationSubmission {
+  id                    String             @id @default(cuid())
+  coachId               String             @unique
+  status                VerificationStatus @default(UNVERIFIED)
+  lastVerifiedAt        DateTime?
+  idVerified            Boolean            @default(false)
+  gameplayProofProvided Boolean            @default(false)
+  skillQuizPassed       Boolean            @default(false)
+  skillQuizScore        Int?
+  skillQuizDate         DateTime?
+  adminNotes            String?            @db.Text
+  submittedAt           DateTime?
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@map("verification_submissions")
+}
+
+model ProofAsset {
+  id        String          @id @default(cuid())
+  type      ProofAssetType
+  url       String
+  metadata  Json?
+  ownerId   String
+  bookingId String?
+  visibility ProofVisibility @default(PRIVATE)
+  createdAt DateTime        @default(now())
+
+  coach            CoachProfile      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  booking          Booking?          @relation(fields: [bookingId], references: [id])
+  disputeEvidences DisputeEvidence[]
+
+  @@map("proof_assets")
+}
+
+model AvailabilityRule {
+  id        String   @id @default(cuid())
+  coachId   String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@map("availability_rules")
+}
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  coachId   String
+  date      DateTime @db.Date
+  isBlocked Boolean  @default(true)
+  startTime String?
+  endTime   String?
+  createdAt DateTime @default(now())
+
+  coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@map("availability_exceptions")
+}
+
+model ServicePackage {
+  id           String   @id @default(cuid())
+  coachId      String
+  name         String
+  description  String   @db.Text
+  durationMins Int
+  priceCents   Int
+  bundleCount  Int      @default(1)
+  isActive     Boolean  @default(true)
+  contentFlags String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  coach    CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@map("service_packages")
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  customerId     String
+  coachId        String
+  serviceId      String
+  slotStartUtc   DateTime
+  slotEndUtc     DateTime
+  status         BookingStatus @default(PENDING_PAYMENT)
+  policySnapshot Json
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  customer      User           @relation("CustomerBookings", fields: [customerId], references: [id])
+  coach         User           @relation("CoachBookings", fields: [coachId], references: [id])
+  service       ServicePackage @relation(fields: [serviceId], references: [id])
+  paymentRecord PaymentRecord?
+  payoutRecord  PayoutRecord?
+  review        Review?
+  dispute       Dispute?
+  messageThread MessageThread?
+  vodNote       VodNote?
+  proofAssets   ProofAsset[]
+
+  @@map("bookings")
+}
+
+model PaymentRecord {
+  id                      String        @id @default(cuid())
+  bookingId               String        @unique
+  stripePaymentIntentId   String        @unique
+  stripeCheckoutSessionId String?
+  amountCents             Int
+  feeCents                Int
+  currency                String        @default("usd")
+  status                  PaymentStatus @default(PENDING)
+  paidAt                  DateTime?
+  refundedAt              DateTime?
+  refundAmountCents       Int?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payment_records")
+}
+
+model PayoutRecord {
+  id               String       @id @default(cuid())
+  coachId          String
+  bookingId        String       @unique
+  stripeTransferId String?
+  amountCents      Int
+  status           PayoutStatus @default(PENDING)
+  transferredAt    DateTime?
+  heldAt           DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payout_records")
+}
+
+model Review {
+  id         String    @id @default(cuid())
+  bookingId  String    @unique
+  customerId String
+  coachId    String
+  rating     Int
+  text       String    @db.Text
+  coachReply String?   @db.Text
+  repliedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  booking  Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer User         @relation("CustomerReviews", fields: [customerId], references: [id])
+  coach    CoachProfile @relation(fields: [coachId], references: [id])
+
+  @@map("reviews")
+}
+
+model MessageThread {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  createdAt DateTime @default(now())
+
+  booking  Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("message_threads")
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  threadId    String
+  senderId    String
+  body        String    @db.Text
+  attachments Json?
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+model VodNote {
+  id             String   @id @default(cuid())
+  bookingId      String   @unique
+  summary        String   @db.Text
+  tags           String[]
+  timestampsJson Json
+  homeworkJson   Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("vod_notes")
+}
+
+model Dispute {
+  id            String        @id @default(cuid())
+  bookingId     String        @unique
+  openedById    String
+  reason        String        @db.Text
+  status        DisputeStatus @default(OPEN)
+  coachResponse String?       @db.Text
+  adminDecision String?       @db.Text
+  resolutionAt  DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking  Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  opener   User              @relation("DisputeOpener", fields: [openedById], references: [id])
+  evidence DisputeEvidence[]
+
+  @@map("disputes")
+}
+
+model DisputeEvidence {
+  id            String   @id @default(cuid())
+  disputeId     String
+  assetId       String
+  submittedById String
+  createdAt     DateTime @default(now())
+
+  dispute Dispute    @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  asset   ProofAsset @relation(fields: [assetId], references: [id])
+
+  @@map("dispute_evidence")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  action       String
+  entityType   String
+  entityId     String
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String
+  payloadJson Json
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model SavedCoach {
+  id        String   @id @default(cuid())
+  userId    String
+  coachId   String
+  createdAt DateTime @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coachId])
+  @@map("saved_coaches")
+}
